@@ -5,9 +5,12 @@ import (
 	"unicode"
 	"context"
 	"github.com/coredns/coredns/plugin"
+	clog "github.com/coredns/coredns/plugin/pkg/log"
 	"github.com/coredns/coredns/request"
 	"github.com/miekg/dns"
 )
+
+var log = clog.NewWithPlugin("encoding20")
 
 // speific id for 0x20 encoding response
 type Sid struct {
@@ -23,6 +26,7 @@ func (m Sid) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (in
 	// 检查DNS请求中的域名是否为大小写混杂的请求
 	if !isLower(state.Name()) {
 		// 如果是大小写混杂的域名请求，返回特殊的结果IP
+		log.Infof("Returning special IP for %s", state.Name())
 		responseIP := m.Data
 		return m.returnSpecialIP(w, r, responseIP)
 	}
