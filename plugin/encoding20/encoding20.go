@@ -18,21 +18,25 @@ type Sid struct {
 	Data string
 }
 
-func (h Sid) Name() string { return "20encoding" }
+func (h Sid) Name() string { return "encoding20" }
 
 func (m Sid) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error) {
 	state := request.Request{W: w, Req: r}
 
+	log.Infof("[%s]Request for %s", m.Name(), state.QName())
 	// 检查DNS请求中的域名是否为大小写混杂的请求
-	if !isLower(state.Name()) {
+	if !isLower(state.QName()) {
 		// 如果是大小写混杂的域名请求，返回特殊的结果IP
-		log.Infof("Returning special IP for %s", state.Name())
+		log.Infof("Returning special IP for %s", state.QName())
 		responseIP := m.Data
 		return m.returnSpecialIP(w, r, responseIP)
 	}
+	// 如果不是大小写混杂的域名请求，返回0.0.0.0
+	log.Infof("Returning 0.0.0.0 for %s", state.QName())
+	return m.returnSpecialIP(w, r, "0.0.0.0")
 
-	// 如果不是大小写混杂的域名请求，继续传递请求给下一个插件
-	return plugin.NextOrFailure(m.Name(), m.Next, ctx, w, r)
+	// 如果不是大小写混杂的域名请求，继续传递请求给下一个插件 (duplicated)
+	// return plugin.NextOrFailure(m.Name(), m.Next, ctx, w, r)
 }
 
 func isLower(domain string) bool {
